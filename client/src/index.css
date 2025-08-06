@@ -136,7 +136,7 @@
 @layer utilities {
   /* Animation utilities */
   .animate-in {
-    @apply animate-fade-in;
+    animation: fade-in 0.5s ease-out;
   }
   
   .slide-in-from-left-5 {

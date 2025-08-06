@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -56,7 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         search as string
       );
       res.json(courses);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching courses:", error);
       res.status(500).json({ message: "Failed to fetch courses" });
     }
@@ -69,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Course not found" });
       }
       res.json(course);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching course:", error);
       res.status(500).json({ message: "Failed to fetch course" });
     }
@@ -86,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const course = await storage.createCourse(courseData);
       res.status(201).json(course);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating course:", error);
       res.status(400).json({ message: "Failed to create course", error: error.message });
     }
@@ -108,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updatedCourse = await storage.updateCourse(req.params.id, updateData);
       res.json(updatedCourse);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating course:", error);
       res.status(400).json({ message: "Failed to update course", error: error.message });
     }
@@ -119,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const courses = await storage.getCoursesByInstructor(userId);
       res.json(courses);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching instructor courses:", error);
       res.status(500).json({ message: "Failed to fetch courses" });
     }
@@ -130,7 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const modules = await storage.getModulesByCourse(req.params.courseId);
       res.json(modules);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching modules:", error);
       res.status(500).json({ message: "Failed to fetch modules" });
     }
@@ -152,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const module = await storage.createModule(moduleData);
       res.status(201).json(module);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating module:", error);
       res.status(400).json({ message: "Failed to create module", error: error.message });
     }
@@ -163,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const lessons = await storage.getLessonsByModule(req.params.moduleId);
       res.json(lessons);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching lessons:", error);
       res.status(500).json({ message: "Failed to fetch lessons" });
     }
@@ -179,7 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const lesson = await storage.createLesson(lessonData);
       res.status(201).json(lesson);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating lesson:", error);
       res.status(400).json({ message: "Failed to create lesson", error: error.message });
     }
@@ -193,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const enrollment = await storage.enrollUser({ userId, courseId });
       res.status(201).json(enrollment);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error enrolling user:", error);
       res.status(400).json({ message: "Failed to enroll in course", error: error.message });
     }
@@ -204,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const enrollments = await storage.getUserEnrollments(userId);
       res.json(enrollments);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching enrollments:", error);
       res.status(500).json({ message: "Failed to fetch enrollments" });
     }
@@ -217,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await storage.updateEnrollmentProgress(userId, req.params.courseId, progress);
       res.json({ message: "Progress updated successfully" });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating progress:", error);
       res.status(400).json({ message: "Failed to update progress", error: error.message });
     }
@@ -235,7 +236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const review = await storage.createReview(reviewData);
       res.status(201).json(review);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating review:", error);
       res.status(400).json({ message: "Failed to create review", error: error.message });
     }
@@ -245,7 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const reviews = await storage.getCourseReviews(req.params.courseId);
       res.json(reviews);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching reviews:", error);
       res.status(500).json({ message: "Failed to fetch reviews" });
     }
@@ -259,7 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       await storage.updateLessonProgress(userId, req.params.lessonId, completed, watchTime);
       res.json({ message: "Lesson progress updated" });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating lesson progress:", error);
       res.status(400).json({ message: "Failed to update lesson progress", error: error.message });
     }
@@ -271,7 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const stats = await storage.getUserStats(userId);
       res.json(stats);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching user stats:", error);
       res.status(500).json({ message: "Failed to fetch user stats" });
     }
@@ -397,7 +398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // File serving
-  app.use('/uploads', require('express').static('uploads'));
+  app.use('/uploads', express.static('uploads'));
 
   const httpServer = createServer(app);
   return httpServer;
