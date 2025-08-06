@@ -11,6 +11,11 @@ import CourseDetail from "@/pages/course-detail";
 import Dashboard from "@/pages/dashboard";
 import CreateCourse from "@/pages/create-course";
 import Checkout from "@/pages/checkout";
+import MyCourses from "@/pages/my-courses";
+import Analytics from "@/pages/analytics";
+import Settings from "@/pages/settings";
+import Profile from "@/pages/profile";
+import Community from "@/pages/community";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -28,6 +33,11 @@ function Router() {
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/create-course" component={CreateCourse} />
           <Route path="/checkout/:courseId" component={Checkout} />
+          <Route path="/my-courses" component={MyCourses} />
+          <Route path="/analytics" component={Analytics} />
+          <Route path="/settings" component={Settings} />
+          <Route path="/profile" component={Profile} />
+          <Route path="/community" component={Community} />
         </>
       )}
       <Route component={NotFound} />

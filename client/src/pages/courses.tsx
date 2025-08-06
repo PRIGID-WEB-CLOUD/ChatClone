@@ -16,7 +16,7 @@ export default function Courses() {
   const [sortBy, setSortBy] = useState("newest");
 
   const { data: courses, isLoading } = useQuery({
-    queryKey: ["/api/courses", { search: searchQuery, category: selectedCategory }],
+    queryKey: ["/api/courses"],
     retry: false,
   });
 

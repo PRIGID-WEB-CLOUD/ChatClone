@@ -128,17 +128,23 @@ export default function Navbar() {
                   <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="w-4 h-4 mr-2" />
-                  Profile
+                <DropdownMenuItem asChild>
+                  <Link href="/profile" className="flex items-center cursor-pointer">
+                    <User className="w-4 h-4 mr-2" />
+                    Profile
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  My Courses
+                <DropdownMenuItem asChild>
+                  <Link href="/my-courses" className="flex items-center cursor-pointer">
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    My Courses
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Analytics
+                <DropdownMenuItem asChild>
+                  <Link href="/analytics" className="flex items-center cursor-pointer">
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Analytics
+                  </Link>
                 </DropdownMenuItem>
                 {user?.role === "instructor" && (
                   <DropdownMenuItem>
@@ -146,9 +152,11 @@ export default function Navbar() {
                     Students
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem>
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
+                <DropdownMenuItem asChild>
+                  <Link href="/settings" className="flex items-center cursor-pointer">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Settings
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-red-600">

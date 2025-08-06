@@ -116,7 +116,7 @@ export default function Checkout() {
   }, [isAuthenticated, isLoading, toast]);
 
   const { data: course, isLoading: courseLoading, error: courseError } = useQuery({
-    queryKey: ["/api/courses", courseId],
+    queryKey: [`/api/courses/${courseId}`],
     retry: false,
     enabled: !!courseId,
   });

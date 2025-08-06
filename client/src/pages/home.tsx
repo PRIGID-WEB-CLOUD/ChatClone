@@ -41,7 +41,7 @@ export default function Home() {
   });
 
   const { data: featuredCourses, isLoading: coursesLoading } = useQuery({
-    queryKey: ["/api/courses", { limit: 6 }],
+    queryKey: ["/api/courses"],
     retry: false,
   });
 

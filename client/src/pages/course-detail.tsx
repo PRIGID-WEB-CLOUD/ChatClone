@@ -51,19 +51,19 @@ export default function CourseDetail() {
   }, [isAuthenticated, authLoading, toast]);
 
   const { data: course, isLoading: courseLoading, error: courseError } = useQuery({
-    queryKey: ["/api/courses", id],
+    queryKey: [`/api/courses/${id}`],
     retry: false,
     enabled: !!id,
   });
 
   const { data: modules, isLoading: modulesLoading } = useQuery({
-    queryKey: ["/api/courses", id, "modules"],
+    queryKey: [`/api/courses/${id}/modules`],
     retry: false,
     enabled: !!id,
   });
 
   const { data: reviews, isLoading: reviewsLoading } = useQuery({
-    queryKey: ["/api/courses", id, "reviews"],
+    queryKey: [`/api/courses/${id}/reviews`],
     retry: false,
     enabled: !!id,
   });
