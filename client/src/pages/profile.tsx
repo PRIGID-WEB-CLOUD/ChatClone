@@ -1,302 +1,406 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import Navbar from "@/components/navbar";
-import CourseCard from "@/components/course-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { 
   User, 
-  Mail, 
+  Edit, 
+  Award, 
+  BookOpen, 
+  Play, 
+  Users, 
   Calendar, 
-  MapPin, 
+  Settings, 
+  Mail,
+  MapPin,
   Link as LinkIcon,
-  Award,
-  BookOpen,
   Star,
+  TrendingUp,
+  Trophy,
+  Target,
   Clock,
-  Users,
-  Edit3
+  GraduationCap
 } from "lucide-react";
-import { Link } from "wouter";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
   const { user } = useAuth();
-  const isInstructor = user?.role === "instructor";
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("overview");
 
-  const { data: userStats } = useQuery({
-    queryKey: ["/api/analytics/user"],
+  const { data: userStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['/api/analytics/user'],
+    retry: false,
   });
 
-  const { data: myCourses } = useQuery({
-    queryKey: ["/api/my-courses"],
-    enabled: isInstructor,
+  const { data: userEnrollments, isLoading: enrollmentsLoading } = useQuery({
+    queryKey: ['/api/my-enrollments'],
+    retry: false,
   });
 
-  const { data: enrollments } = useQuery({
-    queryKey: ["/api/my-enrollments"],
-    enabled: !isInstructor,
+  const { data: userGroups, isLoading: groupsLoading } = useQuery({
+    queryKey: ['/api/my-groups'],
+    retry: false,
   });
 
-  const getUserInitials = () => {
-    const firstName = user?.firstName || "";
-    const lastName = user?.lastName || "";
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-  };
+  const { data: userVideos, isLoading: videosLoading } = useQuery({
+    queryKey: ['/api/videos', '', 'my-videos'],
+    retry: false,
+  });
 
-  const memberSince = user?.createdAt 
-    ? new Date(user.createdAt).toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long' 
-      })
-    : "Recently";
+  const { data: userEvents, isLoading: eventsLoading } = useQuery({
+    queryKey: ['/api/events', '', 'registered'],
+    retry: false,
+  });
 
+  // Mock data for demonstration - replace with real API calls
   const achievements = [
-    { 
-      icon: <BookOpen className="w-6 h-6" />, 
-      title: "Course Completer", 
-      description: "Completed your first course",
-      earned: (userStats?.completedCourses || 0) > 0
+    {
+      id: 1,
+      title: "JavaScript Expert",
+      description: "Completed 10 JavaScript courses",
+      icon: <Trophy className="w-6 h-6 text-yellow-500" />,
+      earned: true,
+      earnedDate: "2024-01-15"
     },
-    { 
-      icon: <Star className="w-6 h-6" />, 
-      title: "Top Rated", 
-      description: "Received 5-star ratings",
-      earned: isInstructor && myCourses?.some((course: any) => parseFloat(course.rating || "0") >= 4.5)
+    {
+      id: 2,
+      title: "Community Leader",
+      description: "Active in 5+ groups",
+      icon: <Users className="w-6 h-6 text-blue-500" />,
+      earned: true,
+      earnedDate: "2024-01-10"
     },
-    { 
-      icon: <Users className="w-6 h-6" />, 
-      title: "Community Builder", 
-      description: "Active in discussions",
-      earned: false
+    {
+      id: 3,
+      title: "Video Creator",
+      description: "Uploaded 5+ educational videos",
+      icon: <Play className="w-6 h-6 text-purple-500" />,
+      earned: false,
+      progress: 60
     },
-    { 
-      icon: <Clock className="w-6 h-6" />, 
-      title: "Dedicated Learner", 
-      description: "100+ hours of learning",
-      earned: (userStats?.totalWatchTime || 0) >= 100
+    {
+      id: 4,
+      title: "Learning Streak",
+      description: "30 days continuous learning",
+      icon: <Target className="w-6 h-6 text-green-500" />,
+      earned: false,
+      progress: 47
+    }
+  ];
+
+  const skillLevels = [
+    { name: "JavaScript", level: 85, color: "bg-yellow-500" },
+    { name: "React", level: 78, color: "bg-blue-500" },
+    { name: "Node.js", level: 72, color: "bg-green-500" },
+    { name: "TypeScript", level: 68, color: "bg-purple-500" },
+    { name: "Python", level: 55, color: "bg-red-500" }
+  ];
+
+  const recentActivity = [
+    {
+      type: "course_completed",
+      title: "Completed 'Advanced React Patterns'",
+      date: "2 hours ago",
+      icon: <GraduationCap className="w-4 h-4 text-green-500" />
+    },
+    {
+      type: "group_joined",
+      title: "Joined 'Frontend Developers' group",
+      date: "1 day ago",
+      icon: <Users className="w-4 h-4 text-blue-500" />
+    },
+    {
+      type: "video_uploaded",
+      title: "Uploaded 'React Hooks Explained'",
+      date: "3 days ago",
+      icon: <Play className="w-4 h-4 text-purple-500" />
+    },
+    {
+      type: "event_attended",
+      title: "Attended 'Web Development Trends' webinar",
+      date: "1 week ago",
+      icon: <Calendar className="w-4 h-4 text-orange-500" />
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Profile Header */}
-        <Card className="mb-8">
-          <CardContent className="p-8">
-            <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
+    <div className="space-y-8">
+      {/* Profile Header */}
+      <Card>
+        <CardContent className="p-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="flex items-center gap-4">
               <Avatar className="w-24 h-24">
                 <AvatarImage src={user?.profileImageUrl} />
-                <AvatarFallback className="text-2xl">{getUserInitials()}</AvatarFallback>
+                <AvatarFallback className="text-2xl">
+                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                </AvatarFallback>
               </Avatar>
-              
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
-                  <h1 className="text-3xl font-bold text-gray-900">
-                    {user?.firstName} {user?.lastName}
-                  </h1>
-                  <Badge variant={isInstructor ? "default" : "secondary"}>
-                    {isInstructor ? "Instructor" : "Student"}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center space-x-4 text-gray-600 mb-4">
-                  <div className="flex items-center">
-                    <Mail className="w-4 h-4 mr-1" />
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold">{user?.firstName} {user?.lastName}</h1>
+                <p className="text-muted-foreground">Learning Enthusiast</p>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Mail className="w-4 h-4" />
                     {user?.email}
                   </div>
-                  <div className="flex items-center">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    Member since {memberSince}
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    Joined {new Date(user?.createdAt || '').toLocaleDateString()}
                   </div>
                 </div>
-
-                <p className="text-gray-700 mb-4">
-                  {isInstructor 
-                    ? "Passionate educator sharing knowledge and helping students grow."
-                    : "Continuous learner exploring new skills and knowledge."
-                  }
-                </p>
-
-                <Link href="/settings">
-                  <Button variant="outline">
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    Edit Profile
-                  </Button>
-                </Link>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <BookOpen className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-gray-900">
-                {isInstructor ? (myCourses?.length || 0) : (enrollments?.length || 0)}
-              </p>
-              <p className="text-sm text-gray-600">
-                {isInstructor ? "Courses Created" : "Courses Enrolled"}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Users className="w-8 h-8 text-green-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-gray-900">
-                {isInstructor 
-                  ? (myCourses?.reduce((sum: number, course: any) => sum + (course.studentsCount || 0), 0) || 0)
-                  : (userStats?.completedCourses || 0)
-                }
-              </p>
-              <p className="text-sm text-gray-600">
-                {isInstructor ? "Students Taught" : "Courses Completed"}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Star className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-gray-900">
-                {isInstructor 
-                  ? (myCourses?.length > 0 
-                      ? (myCourses.reduce((sum: number, course: any) => sum + parseFloat(course.rating || "0"), 0) / myCourses.length).toFixed(1)
-                      : "0.0"
-                    )
-                  : "4.8"
-                }
-              </p>
-              <p className="text-sm text-gray-600">
-                {isInstructor ? "Average Rating" : "Learning Score"}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Clock className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-gray-900">
-                {userStats?.totalWatchTime || 0}
-              </p>
-              <p className="text-sm text-gray-600">Hours Learning</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <Tabs defaultValue="courses" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="courses">
-              {isInstructor ? "My Courses" : "Enrolled Courses"}
-            </TabsTrigger>
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
-            <TabsTrigger value="activity">Recent Activity</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="courses">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {isInstructor ? (
-                myCourses && myCourses.length > 0 ? (
-                  myCourses.map((course: any) => (
-                    <CourseCard key={course.id} course={course} />
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-12">
-                    <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">No courses created yet</p>
-                  </div>
-                )
-              ) : (
-                enrollments && enrollments.length > 0 ? (
-                  enrollments.map((enrollment: any) => (
-                    <CourseCard 
-                      key={enrollment.id} 
-                      course={enrollment.course} 
-                      enrolled={true}
-                      progress={enrollment.progress}
-                    />
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-12">
-                    <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">No enrollments yet</p>
-                  </div>
-                )
-              )}
+            <div className="md:ml-auto">
+              <Button variant="outline" data-testid="edit-profile">
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Profile
+              </Button>
             </div>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="achievements">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {achievements.map((achievement, index) => (
-                <Card key={index} className={achievement.earned ? "bg-green-50 border-green-200" : ""}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center space-x-4">
-                      <div className={`p-3 rounded-lg ${
-                        achievement.earned 
-                          ? "bg-green-100 text-green-600" 
-                          : "bg-gray-100 text-gray-400"
-                      }`}>
-                        {achievement.icon}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{achievement.title}</h3>
-                        <p className="text-sm text-gray-600">{achievement.description}</p>
-                        {achievement.earned && (
-                          <Badge variant="default" className="mt-2">Earned</Badge>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          {/* Stats Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-8 border-t">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">
+                {Array.isArray(userEnrollments) ? userEnrollments.length : 0}
+              </div>
+              <p className="text-sm text-muted-foreground">Courses</p>
             </div>
-          </TabsContent>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">
+                {userStats?.completedCourses || 0}
+              </div>
+              <p className="text-sm text-muted-foreground">Completed</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">
+                {Array.isArray(userGroups) ? userGroups.length : 0}
+              </div>
+              <p className="text-sm text-muted-foreground">Groups</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">14</div>
+              <p className="text-sm text-muted-foreground">Day Streak</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-          <TabsContent value="activity">
+      {/* Profile Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+          <TabsTrigger value="achievements" data-testid="tab-achievements">Achievements</TabsTrigger>
+          <TabsTrigger value="skills" data-testid="tab-skills">Skills</TabsTrigger>
+          <TabsTrigger value="activity" data-testid="tab-activity">Activity</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Learning Progress */}
             <Card>
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  Learning Progress
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                    <BookOpen className="w-5 h-5 text-blue-500" />
-                    <div>
-                      <p className="font-medium">Completed a lesson</p>
-                      <p className="text-sm text-gray-600">React Development Course • 2 hours ago</p>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">Course Completion</span>
+                      <span className="text-sm font-medium">75%</span>
                     </div>
+                    <Progress value={75} />
                   </div>
-                  
-                  <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                    <Award className="w-5 h-5 text-green-500" />
-                    <div>
-                      <p className="font-medium">Earned achievement</p>
-                      <p className="text-sm text-gray-600">Course Completer • 1 day ago</p>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">Weekly Goal</span>
+                      <span className="text-sm font-medium">8/10 hours</span>
                     </div>
+                    <Progress value={80} />
                   </div>
-                  
-                  <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
-                    <Star className="w-5 h-5 text-purple-500" />
-                    <div>
-                      <p className="font-medium">Left a review</p>
-                      <p className="text-sm text-gray-600">JavaScript Fundamentals • 3 days ago</p>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm">Assignments</span>
+                      <span className="text-sm font-medium">12/15</span>
                     </div>
+                    <Progress value={80} />
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+
+            {/* Current Enrollments */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5" />
+                  Current Courses
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {enrollmentsLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="animate-pulse">
+                        <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                        <div className="h-2 bg-gray-200 rounded w-full"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : Array.isArray(userEnrollments) && userEnrollments.length > 0 ? (
+                  <div className="space-y-4">
+                    {userEnrollments.slice(0, 3).map((enrollment: any) => (
+                      <div key={enrollment.id} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-sm font-medium">
+                            {enrollment.course?.title || "Course Title"}
+                          </h4>
+                          <span className="text-sm text-muted-foreground">
+                            {enrollment.progress || 0}%
+                          </span>
+                        </div>
+                        <Progress value={enrollment.progress || 0} />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No active courses
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Recent Achievements */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="w-5 h-5" />
+                  Recent Achievements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {achievements.filter(a => a.earned).slice(0, 3).map((achievement) => (
+                    <div key={achievement.id} className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        {achievement.icon}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium">{achievement.title}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(achievement.earnedDate!).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="achievements" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {achievements.map((achievement) => (
+              <Card key={achievement.id} className={achievement.earned ? "border-primary/50" : ""}>
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className={`p-3 rounded-lg ${achievement.earned ? 'bg-primary/10' : 'bg-muted'}`}>
+                      {achievement.icon}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{achievement.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {achievement.description}
+                      </p>
+                      {achievement.earned ? (
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                          Earned {new Date(achievement.earnedDate!).toLocaleDateString()}
+                        </Badge>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Progress</span>
+                            <span>{achievement.progress}%</span>
+                          </div>
+                          <Progress value={achievement.progress} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="skills" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Skill Levels</CardTitle>
+              <CardDescription>
+                Your proficiency in different technologies based on completed courses and assessments
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {skillLevels.map((skill, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">{skill.name}</span>
+                      <span className="text-sm text-muted-foreground">{skill.level}%</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div 
+                        className={`${skill.color} h-2 rounded-full transition-all duration-500`}
+                        style={{ width: `${skill.level}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>
+                Your recent learning activities and achievements
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentActivity.map((activity, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                    <div className="p-2 bg-background rounded-lg">
+                      {activity.icon}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{activity.title}</p>
+                      <p className="text-xs text-muted-foreground">{activity.date}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

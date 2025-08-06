@@ -2,14 +2,13 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import Navbar from "@/components/navbar";
 import CourseCard from "@/components/course-card";
 import ProgressBar from "@/components/progress-bar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, Clock, Star, TrendingUp, BookOpen, Users } from "lucide-react";
+import { GraduationCap, Clock, Star, TrendingUp, BookOpen, Users, Play, Calendar, ShoppingBag, Bell, Plus, ArrowRight } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Home() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -30,7 +29,7 @@ export default function Home() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: enrollments, isLoading: enrollmentsLoading } = useQuery({
+  const { data: enrollments = [], isLoading: enrollmentsLoading } = useQuery({
     queryKey: ["/api/my-enrollments"],
     retry: false,
   });
@@ -40,8 +39,23 @@ export default function Home() {
     retry: false,
   });
 
-  const { data: featuredCourses, isLoading: coursesLoading } = useQuery({
+  const { data: featuredCourses = [], isLoading: coursesLoading } = useQuery({
     queryKey: ["/api/courses"],
+    retry: false,
+  });
+
+  const { data: recentVideos = [], isLoading: videosLoading } = useQuery({
+    queryKey: ["/api/videos", "", "", "3"],
+    retry: false,
+  });
+
+  const { data: upcomingEvents = [], isLoading: eventsLoading } = useQuery({
+    queryKey: ["/api/events", "", "upcoming"],
+    retry: false,
+  });
+
+  const { data: notifications = [], isLoading: notificationsLoading } = useQuery({
+    queryKey: ["/api/notifications"],
     retry: false,
   });
 
@@ -58,251 +72,312 @@ export default function Home() {
       icon: <BookOpen className="w-4 h-4 text-blue-500" />,
       title: "Completed 'React Hooks Deep Dive'",
       time: "2 hours ago",
-      bgColor: "bg-blue-50"
+      bgColor: "bg-blue-50 dark:bg-blue-900/20"
     },
     {
       icon: <Star className="w-4 h-4 text-green-500" />,
-      title: "Submitted assignment 'Design System'",
+      title: "Earned 'JavaScript Expert' badge",
       time: "1 day ago",
-      bgColor: "bg-green-50"
-    }
-  ];
-
-  const upcomingClasses = [
-    {
-      title: "Advanced JavaScript",
-      time: "Today, 2:00 PM",
-      color: "border-l-primary"
+      bgColor: "bg-green-50 dark:bg-green-900/20"
     },
     {
-      title: "Design Workshop",
-      time: "Tomorrow, 10:00 AM",
-      color: "border-l-orange-500"
+      icon: <Users className="w-4 h-4 text-purple-500" />,
+      title: "Joined 'Frontend Developers' group",
+      time: "2 days ago",
+      bgColor: "bg-purple-50 dark:bg-purple-900/20"
     }
   ];
 
+  const unreadNotifications = notifications.filter((n: any) => !n.isRead).length;
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.firstName || 'Student'}! 👋
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold mb-2" data-testid="welcome-message">
+            Welcome back, {user?.firstName || "Student"}! 👋
           </h1>
-          <p className="text-gray-600">Continue your learning journey</p>
+          <p className="text-muted-foreground">
+            Ready to continue your learning journey?
+          </p>
         </div>
+        {unreadNotifications > 0 && (
+          <Link href="/notifications">
+            <Button variant="outline" size="sm" data-testid="notifications-button">
+              <Bell className="w-4 h-4 mr-2" />
+              {unreadNotifications} new
+            </Button>
+          </Link>
+        )}
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Hours This Week</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {statsLoading ? "..." : userStats?.totalHoursLearned || "12.5"}
-                  </p>
-                </div>
-                <Clock className="w-8 h-8 text-blue-500" />
-              </div>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Link href="/groups">
+          <Card className="hover:shadow-md transition-all hover:scale-105 cursor-pointer" data-testid="quick-groups">
+            <CardContent className="p-6 text-center">
+              <Users className="w-10 h-10 mx-auto mb-3 text-primary" />
+              <h3 className="font-semibold mb-1">Groups</h3>
+              <p className="text-sm text-muted-foreground">Join discussions</p>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Courses Enrolled</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {enrollmentsLoading ? "..." : enrollments?.length || "0"}
-                  </p>
-                </div>
-                <BookOpen className="w-8 h-8 text-green-500" />
-              </div>
+        </Link>
+        <Link href="/videos">
+          <Card className="hover:shadow-md transition-all hover:scale-105 cursor-pointer" data-testid="quick-videos">
+            <CardContent className="p-6 text-center">
+              <Play className="w-10 h-10 mx-auto mb-3 text-primary" />
+              <h3 className="font-semibold mb-1">Videos</h3>
+              <p className="text-sm text-muted-foreground">Watch content</p>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Completed</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {statsLoading ? "..." : userStats?.completedCourses || "3"}
-                  </p>
-                </div>
-                <GraduationCap className="w-8 h-8 text-purple-500" />
-              </div>
+        </Link>
+        <Link href="/events">
+          <Card className="hover:shadow-md transition-all hover:scale-105 cursor-pointer" data-testid="quick-events">
+            <CardContent className="p-6 text-center">
+              <Calendar className="w-10 h-10 mx-auto mb-3 text-primary" />
+              <h3 className="font-semibold mb-1">Events</h3>
+              <p className="text-sm text-muted-foreground">Join webinars</p>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Streak</p>
-                  <p className="text-2xl font-bold text-gray-900">7 days</p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-orange-500" />
-              </div>
+        </Link>
+        <Link href="/marketplace">
+          <Card className="hover:shadow-md transition-all hover:scale-105 cursor-pointer" data-testid="quick-marketplace">
+            <CardContent className="p-6 text-center">
+              <ShoppingBag className="w-10 h-10 mx-auto mb-3 text-primary" />
+              <h3 className="font-semibold mb-1">Marketplace</h3>
+              <p className="text-sm text-muted-foreground">Buy resources</p>
             </CardContent>
           </Card>
-        </div>
+        </Link>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Continue Learning */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Continue Learning
-                  <Button variant="ghost" size="sm">View All</Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {enrollmentsLoading ? (
-                    <div className="animate-pulse space-y-4">
-                      {[1, 2].map((i) => (
-                        <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
-                      ))}
-                    </div>
-                  ) : enrollments?.slice(0, 2).map((enrollment) => (
-                    <Card key={enrollment.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer">
-                      <div className="flex items-start space-x-4">
-                        <img 
-                          src={enrollment.courseThumbnail || "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"} 
-                          alt={enrollment.courseTitle}
-                          className="w-20 h-20 object-cover rounded-lg"
-                        />
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 mb-1">{enrollment.courseTitle}</h4>
-                          <p className="text-sm text-gray-600 mb-3">{enrollment.courseDescription}</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-primary">Progress</span>
-                            <span className="text-sm text-gray-500">{enrollment.progress}%</span>
-                          </div>
-                          <ProgressBar progress={enrollment.progress} className="mt-2" />
-                        </div>
-                      </div>
-                    </Card>
-                  )) || (
-                    <div className="text-center py-8 text-gray-500">
-                      <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                      <p>No courses enrolled yet. Start learning today!</p>
-                    </div>
-                  )}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Hours This Week</p>
+                <p className="text-2xl font-bold">
+                  {statsLoading ? "..." : userStats?.totalHoursLearned || "12.5"}
+                </p>
+              </div>
+              <Clock className="w-8 h-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Courses Enrolled</p>
+                <p className="text-2xl font-bold">
+                  {enrollmentsLoading ? "..." : Array.isArray(enrollments) ? enrollments.length : 0}
+                </p>
+              </div>
+              <BookOpen className="w-8 h-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Completed</p>
+                <p className="text-2xl font-bold">
+                  {statsLoading ? "..." : userStats?.completedCourses || 3}
+                </p>
+              </div>
+              <GraduationCap className="w-8 h-8 text-purple-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Streak</p>
+                <p className="text-2xl font-bold">14 days</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-orange-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Continue Learning */}
+        <div className="lg:col-span-2">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">Continue Learning</h2>
+            <Link href="/my-courses">
+              <Button variant="outline" size="sm">
+                View All <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
+          
+          {enrollmentsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-gray-300 dark:bg-gray-700 h-48 rounded-lg mb-4"></div>
+                  <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {recentActivity.map((activity, index) => (
-                    <div key={index} className={`flex items-center space-x-3 p-3 ${activity.bgColor} rounded-lg`}>
-                      <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                        {activity.icon}
+              ))}
+            </div>
+          ) : Array.isArray(enrollments) && enrollments.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {enrollments.slice(0, 4).map((enrollment: any) => (
+                <Card key={enrollment.id} className="hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <BookOpen className="w-6 h-6 text-primary" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                        <p className="text-xs text-gray-500">{activity.time}</p>
+                        <h3 className="font-semibold">{enrollment.course?.title || "Course Title"}</h3>
+                        <p className="text-sm text-muted-foreground">{enrollment.course?.instructor || "Instructor"}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Progress</span>
+                        <span>{enrollment.progress || 0}%</span>
+                      </div>
+                      <ProgressBar progress={enrollment.progress || 0} />
+                    </div>
+                    <Link href={`/course/${enrollment.courseId}`}>
+                      <Button className="w-full mt-4">Continue</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <BookOpen className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-semibold mb-2">No courses yet</h3>
+                <p className="text-muted-foreground mb-4">Start your learning journey by enrolling in a course</p>
+                <Link href="/courses">
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Browse Courses
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Sidebar Content */}
+        <div className="space-y-6">
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {recentActivity.map((activity, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <div className={`p-2 rounded-lg ${activity.bgColor}`}>
+                    {activity.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">{activity.title}</p>
+                    <p className="text-xs text-muted-foreground">{activity.time}</p>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Events */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg">Upcoming Events</CardTitle>
+              <Link href="/events">
+                <Button variant="ghost" size="sm">View All</Button>
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {eventsLoading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : Array.isArray(upcomingEvents) && upcomingEvents.length > 0 ? (
+                <div className="space-y-4">
+                  {upcomingEvents.slice(0, 3).map((event: any) => (
+                    <div key={event.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                      <Calendar className="w-4 h-4 text-primary mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium line-clamp-1">{event.title}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(event.startTime).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No upcoming events
+                </p>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* Recommended Courses */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recommended for You</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {coursesLoading ? (
-                    <div className="animate-pulse space-y-4">
-                      {[1, 2].map((i) => (
-                        <div key={i} className="h-40 bg-gray-200 rounded-xl"></div>
-                      ))}
-                    </div>
-                  ) : featuredCourses?.slice(0, 2).map((course) => (
-                    <CourseCard key={course.id} course={course} compact />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* This Week Stats */}
-            <Card className="bg-gradient-to-br from-primary to-secondary text-white">
-              <CardContent className="p-6">
-                <h4 className="font-semibold mb-4">This Week</h4>
+          {/* Latest Videos */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg">Latest Videos</CardTitle>
+              <Link href="/videos">
+                <Button variant="ghost" size="sm">View All</Button>
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {videosLoading ? (
                 <div className="space-y-4">
-                  <div>
-                    <p className="text-blue-100 text-sm">Hours Learned</p>
-                    <p className="text-2xl font-bold">12.5</p>
-                  </div>
-                  <div>
-                    <p className="text-blue-100 text-sm">Courses Completed</p>
-                    <p className="text-2xl font-bold">{userStats?.completedCourses || 0}</p>
-                  </div>
-                  <div>
-                    <p className="text-blue-100 text-sm">Certificates Earned</p>
-                    <p className="text-2xl font-bold">1</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Upcoming Classes */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Upcoming</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {upcomingClasses.map((classItem, index) => (
-                    <div key={index} className={`border-l-4 ${classItem.color} pl-3`}>
-                      <p className="text-sm font-medium text-gray-900">{classItem.title}</p>
-                      <p className="text-xs text-gray-500">{classItem.time}</p>
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button className="w-full justify-start" variant="ghost">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Browse Courses
-                </Button>
-                <Button className="w-full justify-start" variant="ghost">
-                  <Users className="w-4 h-4 mr-2" />
-                  Join Community
-                </Button>
-                <Button className="w-full justify-start" variant="ghost">
-                  <GraduationCap className="w-4 h-4 mr-2" />
-                  View Certificates
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+              ) : Array.isArray(recentVideos) && recentVideos.length > 0 ? (
+                <div className="space-y-4">
+                  {recentVideos.slice(0, 3).map((video: any) => (
+                    <div key={video.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                      <Play className="w-4 h-4 text-primary mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium line-clamp-1">{video.title}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          {video.viewsCount} views
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No videos available
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

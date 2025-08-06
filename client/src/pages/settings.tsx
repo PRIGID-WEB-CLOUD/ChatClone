@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import Navbar from "@/components/navbar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -16,348 +17,603 @@ import {
   Shield, 
   CreditCard, 
   Globe, 
-  Palette,
-  Save,
-  Upload
+  Moon, 
+  Sun, 
+  Eye, 
+  Lock, 
+  Mail,
+  Smartphone,
+  Download,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Settings() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
 
+  // Form states
   const [profileData, setProfileData] = useState({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    email: user?.email || "",
+    firstName: (user as any)?.firstName || "",
+    lastName: (user as any)?.lastName || "",
+    email: (user as any)?.email || "",
     bio: "",
-    website: "",
-    linkedin: "",
-    twitter: "",
+    location: "",
+    website: ""
   });
 
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: true,
+    pushNotifications: true,
     courseUpdates: true,
     marketingEmails: false,
     weeklyDigest: true,
-    pushNotifications: true,
+    mobilePush: true
   });
 
   const [privacySettings, setPrivacySettings] = useState({
     profileVisibility: "public",
+    showEmail: false,
     showProgress: true,
-    showCertificates: true,
     allowMessages: true,
+    dataCollection: true
   });
 
-  const handleSaveProfile = async () => {
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSaveProfile = () => {
+    toast({
+      title: "Profile updated",
+      description: "Your profile information has been saved successfully."
+    });
   };
 
-  const handleSaveNotifications = async () => {
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Notification Settings Updated",
-        description: "Your notification preferences have been saved.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update notification settings.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSaveNotifications = () => {
+    toast({
+      title: "Notification settings updated",
+      description: "Your notification preferences have been saved."
+    });
   };
 
-  const getUserInitials = () => {
-    const firstName = user?.firstName || "";
-    const lastName = user?.lastName || "";
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  const handleSavePrivacy = () => {
+    toast({
+      title: "Privacy settings updated",
+      description: "Your privacy preferences have been saved."
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-          <p className="text-gray-600">Manage your account settings and preferences</p>
-        </div>
-
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="profile" className="flex items-center">
-              <User className="w-4 h-4 mr-2" />
-              Profile
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center">
-              <Bell className="w-4 h-4 mr-2" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="privacy" className="flex items-center">
-              <Shield className="w-4 h-4 mr-2" />
-              Privacy
-            </TabsTrigger>
-            <TabsTrigger value="billing" className="flex items-center">
-              <CreditCard className="w-4 h-4 mr-2" />
-              Billing
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center space-x-4">
-                  <Avatar className="w-20 h-20">
-                    <AvatarImage src={user?.profileImageUrl} />
-                    <AvatarFallback className="text-lg">{getUserInitials()}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <Button variant="outline" size="sm">
-                      <Upload className="w-4 h-4 mr-2" />
-                      Change Photo
-                    </Button>
-                    <p className="text-sm text-gray-500 mt-1">JPG, PNG up to 5MB</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      value={profileData.firstName}
-                      onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      value={profileData.lastName}
-                      onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="bio">Bio</Label>
-                  <textarea
-                    id="bio"
-                    className="w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Tell us about yourself..."
-                    value={profileData.bio}
-                    onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Badge variant="outline">{user?.role}</Badge>
-                  <span className="text-sm text-gray-600">Account Type</span>
-                </div>
-
-                <Button onClick={handleSaveProfile} disabled={isLoading}>
-                  <Save className="w-4 h-4 mr-2" />
-                  {isLoading ? "Saving..." : "Save Changes"}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="notifications">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notification Preferences</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Email Notifications</Label>
-                      <p className="text-sm text-gray-500">Receive notifications via email</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.emailNotifications}
-                      onCheckedChange={(checked) => 
-                        setNotificationSettings({...notificationSettings, emailNotifications: checked})
-                      }
-                    />
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Course Updates</Label>
-                      <p className="text-sm text-gray-500">Get notified about new lessons and course updates</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.courseUpdates}
-                      onCheckedChange={(checked) => 
-                        setNotificationSettings({...notificationSettings, courseUpdates: checked})
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Marketing Emails</Label>
-                      <p className="text-sm text-gray-500">Receive promotional emails and course recommendations</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.marketingEmails}
-                      onCheckedChange={(checked) => 
-                        setNotificationSettings({...notificationSettings, marketingEmails: checked})
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Weekly Digest</Label>
-                      <p className="text-sm text-gray-500">Weekly summary of your learning progress</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.weeklyDigest}
-                      onCheckedChange={(checked) => 
-                        setNotificationSettings({...notificationSettings, weeklyDigest: checked})
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Push Notifications</Label>
-                      <p className="text-sm text-gray-500">Receive push notifications in your browser</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.pushNotifications}
-                      onCheckedChange={(checked) => 
-                        setNotificationSettings({...notificationSettings, pushNotifications: checked})
-                      }
-                    />
-                  </div>
-                </div>
-
-                <Button onClick={handleSaveNotifications} disabled={isLoading}>
-                  <Save className="w-4 h-4 mr-2" />
-                  {isLoading ? "Saving..." : "Save Preferences"}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="privacy">
-            <Card>
-              <CardHeader>
-                <CardTitle>Privacy Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Show Learning Progress</Label>
-                      <p className="text-sm text-gray-500">Allow others to see your course progress</p>
-                    </div>
-                    <Switch
-                      checked={privacySettings.showProgress}
-                      onCheckedChange={(checked) => 
-                        setPrivacySettings({...privacySettings, showProgress: checked})
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Show Certificates</Label>
-                      <p className="text-sm text-gray-500">Display your certificates publicly</p>
-                    </div>
-                    <Switch
-                      checked={privacySettings.showCertificates}
-                      onCheckedChange={(checked) => 
-                        setPrivacySettings({...privacySettings, showCertificates: checked})
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Allow Messages</Label>
-                      <p className="text-sm text-gray-500">Let other users send you messages</p>
-                    </div>
-                    <Switch
-                      checked={privacySettings.allowMessages}
-                      onCheckedChange={(checked) => 
-                        setPrivacySettings({...privacySettings, allowMessages: checked})
-                      }
-                    />
-                  </div>
-                </div>
-
-                <Button disabled={isLoading}>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Privacy Settings
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="billing">
-            <Card>
-              <CardHeader>
-                <CardTitle>Billing & Subscription</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Active Subscription</h3>
-                  <p className="text-gray-600 mb-4">You're currently on the free plan</p>
-                  <Button>Upgrade to Premium</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold">Settings</h1>
+        <p className="text-muted-foreground mt-2">
+          Manage your account settings and preferences
+        </p>
       </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="profile" data-testid="tab-profile">Profile</TabsTrigger>
+          <TabsTrigger value="notifications" data-testid="tab-notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="privacy" data-testid="tab-privacy">Privacy</TabsTrigger>
+          <TabsTrigger value="billing" data-testid="tab-billing">Billing</TabsTrigger>
+          <TabsTrigger value="account" data-testid="tab-account">Account</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="profile" className="space-y-6">
+          {/* Profile Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Profile Information
+              </CardTitle>
+              <CardDescription>
+                Update your personal information and profile details
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Avatar Section */}
+              <div className="flex items-center gap-4">
+                <Avatar className="w-20 h-20">
+                  <AvatarImage src={(user as any)?.profileImageUrl} />
+                  <AvatarFallback className="text-lg">
+                    {(user as any)?.firstName?.[0]}{(user as any)?.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="space-y-2">
+                  <Button size="sm" data-testid="change-avatar">Change Avatar</Button>
+                  <Button size="sm" variant="outline">Remove</Button>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Form Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={profileData.firstName}
+                    onChange={(e) => setProfileData(prev => ({...prev, firstName: e.target.value}))}
+                    data-testid="input-first-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={profileData.lastName}
+                    onChange={(e) => setProfileData(prev => ({...prev, lastName: e.target.value}))}
+                    data-testid="input-last-name"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={profileData.email}
+                  onChange={(e) => setProfileData(prev => ({...prev, email: e.target.value}))}
+                  data-testid="input-email"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  placeholder="Tell us about yourself..."
+                  value={profileData.bio}
+                  onChange={(e) => setProfileData(prev => ({...prev, bio: e.target.value}))}
+                  data-testid="input-bio"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    placeholder="City, Country"
+                    value={profileData.location}
+                    onChange={(e) => setProfileData(prev => ({...prev, location: e.target.value}))}
+                    data-testid="input-location"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="website">Website</Label>
+                  <Input
+                    id="website"
+                    placeholder="https://example.com"
+                    value={profileData.website}
+                    onChange={(e) => setProfileData(prev => ({...prev, website: e.target.value}))}
+                    data-testid="input-website"
+                  />
+                </div>
+              </div>
+
+              <Button onClick={handleSaveProfile} data-testid="save-profile">
+                Save Changes
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-6">
+          {/* Email Notifications */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="w-5 h-5" />
+                Email Notifications
+              </CardTitle>
+              <CardDescription>
+                Choose which emails you'd like to receive
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Course Updates</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Receive notifications about course announcements and updates
+                  </p>
+                </div>
+                <Switch
+                  checked={notificationSettings.courseUpdates}
+                  onCheckedChange={(checked) => 
+                    setNotificationSettings(prev => ({...prev, courseUpdates: checked}))
+                  }
+                  data-testid="switch-course-updates"
+                />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Weekly Digest</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Weekly summary of your learning progress and achievements
+                  </p>
+                </div>
+                <Switch
+                  checked={notificationSettings.weeklyDigest}
+                  onCheckedChange={(checked) => 
+                    setNotificationSettings(prev => ({...prev, weeklyDigest: checked}))
+                  }
+                  data-testid="switch-weekly-digest"
+                />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Marketing Emails</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Promotional emails about new courses and features
+                  </p>
+                </div>
+                <Switch
+                  checked={notificationSettings.marketingEmails}
+                  onCheckedChange={(checked) => 
+                    setNotificationSettings(prev => ({...prev, marketingEmails: checked}))
+                  }
+                  data-testid="switch-marketing-emails"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Push Notifications */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Smartphone className="w-5 h-5" />
+                Push Notifications
+              </CardTitle>
+              <CardDescription>
+                Control your mobile and browser notifications
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Browser Notifications</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Receive notifications in your browser
+                  </p>
+                </div>
+                <Switch
+                  checked={notificationSettings.pushNotifications}
+                  onCheckedChange={(checked) => 
+                    setNotificationSettings(prev => ({...prev, pushNotifications: checked}))
+                  }
+                  data-testid="switch-browser-notifications"
+                />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Mobile Push</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Receive notifications on your mobile device
+                  </p>
+                </div>
+                <Switch
+                  checked={notificationSettings.mobilePush}
+                  onCheckedChange={(checked) => 
+                    setNotificationSettings(prev => ({...prev, mobilePush: checked}))
+                  }
+                  data-testid="switch-mobile-push"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Button onClick={handleSaveNotifications} data-testid="save-notifications">
+            Save Notification Settings
+          </Button>
+        </TabsContent>
+
+        <TabsContent value="privacy" className="space-y-6">
+          {/* Profile Visibility */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Eye className="w-5 h-5" />
+                Profile Visibility
+              </CardTitle>
+              <CardDescription>
+                Control who can see your profile and learning activity
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="profileVisibility">Profile Visibility</Label>
+                <Select
+                  value={privacySettings.profileVisibility}
+                  onValueChange={(value) => 
+                    setPrivacySettings(prev => ({...prev, profileVisibility: value}))
+                  }
+                >
+                  <SelectTrigger data-testid="select-profile-visibility">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">Public - Anyone can see</SelectItem>
+                    <SelectItem value="students">Students only</SelectItem>
+                    <SelectItem value="private">Private - Only you</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Show Email Address</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Display your email on your public profile
+                  </p>
+                </div>
+                <Switch
+                  checked={privacySettings.showEmail}
+                  onCheckedChange={(checked) => 
+                    setPrivacySettings(prev => ({...prev, showEmail: checked}))
+                  }
+                  data-testid="switch-show-email"
+                />
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Show Learning Progress</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Allow others to see your course progress and achievements
+                  </p>
+                </div>
+                <Switch
+                  checked={privacySettings.showProgress}
+                  onCheckedChange={(checked) => 
+                    setPrivacySettings(prev => ({...prev, showProgress: checked}))
+                  }
+                  data-testid="switch-show-progress"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Data & Privacy */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5" />
+                Data & Privacy
+              </CardTitle>
+              <CardDescription>
+                Manage your data and privacy preferences
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Allow Direct Messages</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Let other users send you direct messages
+                  </p>
+                </div>
+                <Switch
+                  checked={privacySettings.allowMessages}
+                  onCheckedChange={(checked) => 
+                    setPrivacySettings(prev => ({...prev, allowMessages: checked}))
+                  }
+                  data-testid="switch-allow-messages"
+                />
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Analytics & Data Collection</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Help improve the platform by sharing usage data
+                  </p>
+                </div>
+                <Switch
+                  checked={privacySettings.dataCollection}
+                  onCheckedChange={(checked) => 
+                    setPrivacySettings(prev => ({...prev, dataCollection: checked}))
+                  }
+                  data-testid="switch-data-collection"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Button onClick={handleSavePrivacy} data-testid="save-privacy">
+            Save Privacy Settings
+          </Button>
+        </TabsContent>
+
+        <TabsContent value="billing" className="space-y-6">
+          {/* Subscription */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Current Plan
+              </CardTitle>
+              <CardDescription>
+                Manage your subscription and billing information
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold">Free Plan</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Access to basic courses and features
+                  </p>
+                </div>
+                <Badge variant="outline">Current</Badge>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <h4 className="font-medium">Upgrade Options</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="space-y-2">
+                        <h4 className="font-semibold">Pro Plan</h4>
+                        <p className="text-2xl font-bold">$19/month</p>
+                        <p className="text-sm text-muted-foreground">
+                          Unlimited courses, certificates, priority support
+                        </p>
+                      </div>
+                      <Button className="w-full mt-4" data-testid="upgrade-pro">
+                        Upgrade to Pro
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="space-y-2">
+                        <h4 className="font-semibold">Team Plan</h4>
+                        <p className="text-2xl font-bold">$39/month</p>
+                        <p className="text-sm text-muted-foreground">
+                          Everything in Pro plus team management
+                        </p>
+                      </div>
+                      <Button className="w-full mt-4" variant="outline" data-testid="upgrade-team">
+                        Upgrade to Team
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Billing History */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Billing History</CardTitle>
+              <CardDescription>
+                View and download your payment history
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <CreditCard className="w-12 h-12 mx-auto mb-4" />
+                <p>No billing history available</p>
+                <p className="text-sm">You're currently on the free plan</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="account" className="space-y-6">
+          {/* Security */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="w-5 h-5" />
+                Security
+              </CardTitle>
+              <CardDescription>
+                Manage your account security settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Change Password</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Update your account password
+                  </p>
+                </div>
+                <Button variant="outline" data-testid="change-password">
+                  Change Password
+                </Button>
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Two-Factor Authentication</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Add an extra layer of security to your account
+                  </p>
+                </div>
+                <Button variant="outline" data-testid="enable-2fa">
+                  Enable 2FA
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Data Export */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Download className="w-5 h-5" />
+                Data Export
+              </CardTitle>
+              <CardDescription>
+                Download your personal data and learning history
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  You can request a copy of all your personal data, including courses, 
+                  progress, and account information.
+                </p>
+                <Button variant="outline" data-testid="export-data">
+                  <Download className="w-4 h-4 mr-2" />
+                  Request Data Export
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Danger Zone */}
+          <Card className="border-destructive">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="w-5 h-5" />
+                Danger Zone
+              </CardTitle>
+              <CardDescription>
+                Irreversible actions that will affect your account
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium">Delete Account</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Permanently delete your account and all associated data
+                  </p>
+                </div>
+                <Button variant="destructive" data-testid="delete-account">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Account
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
