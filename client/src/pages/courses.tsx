@@ -11,7 +11,7 @@ import { Search, Filter, Grid3X3, List } from "lucide-react";
 
 export default function Courses() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("newest");
 
@@ -84,7 +84,7 @@ export default function Courses() {
                   {categories.map((category) => (
                     <SelectItem 
                       key={category} 
-                      value={category === "All Categories" ? "" : category}
+                      value={category}
                     >
                       {category}
                     </SelectItem>
@@ -128,14 +128,14 @@ export default function Courses() {
             </div>
 
             {/* Active Filters */}
-            {(selectedCategory || searchQuery) && (
+            {(selectedCategory !== "All Categories" || searchQuery) && (
               <div className="flex items-center gap-2 mt-4">
                 <span className="text-sm text-gray-600">Active filters:</span>
-                {selectedCategory && (
+                {selectedCategory !== "All Categories" && (
                   <Badge variant="secondary" className="gap-1">
                     {selectedCategory}
                     <button 
-                      onClick={() => setSelectedCategory("")}
+                      onClick={() => setSelectedCategory("All Categories")}
                       className="ml-1 hover:bg-gray-200 rounded-full w-4 h-4 flex items-center justify-center"
                     >
                       ×

@@ -1,0 +1,108 @@
+Sure! Here's your complete feature prompt (with all 8 features) written clearly and ready to use for developers, designers, or platform planning:
+
+
+---
+
+Platform Feature Expansion Prompt
+
+Please implement the following features in the platform:
+
+1. Group/Discussion Hub
+
+Allow users to create and join discussion groups or hubs.
+
+Support tagging, mentions, hashtags, and file uploads (PDF, MP3, PNG, MP4, etc.).
+
+Enable chat, topic threads, and moderation roles (admin, moderator, member).
+
+Groups can be free or paid, with admin approval control.
+
+
+
+2. Course Creation with Editor
+
+Add functionality for users to create and manage courses.
+
+Include a rich content editor that supports multimedia (videos, images, links).
+
+Allow lesson/module structuring, course pricing (free or paid), and visibility settings.
+
+
+
+3. Sidebar Navigation
+
+Move the following from the top navbar to a collapsible sidebar:
+
+Course Page
+
+My Learning
+
+Community
+
+Dashboard
+
+
+Sidebar should support icons and smooth navigation experience.
+
+
+
+4. Notification & Activity Center
+
+Implement real-time and system notifications for user activity (mentions, course updates, messages).
+
+Add an activity feed or center with filters and read/unread toggles.
+
+Include settings for email and push notifications.
+
+
+
+5. Video Page
+
+Add a centralized video content page.
+
+Users can upload and view videos in MP4, WebM, MOV, etc.
+
+Include like, comment, share features, playlist support, and privacy controls.
+
+Option for monetization and basic analytics (views, engagement).
+
+
+
+6. Events & Webinar System
+
+Enable creation of live events or webinars with scheduling and countdown timers.
+
+Integrate Zoom, YouTube Live, or Vimeo.
+
+Support registration, chat, Q&A, ticketing (free or paid), and post-event recording access.
+
+
+
+7. Marketplace/Resource Store
+
+Allow users to sell or share resources: eBooks, templates, software, graphics, etc.
+
+Support pricing, discounts, ratings, previews, and secure downloads.
+
+Add seller dashboard and integrate payment gateways (e.g., PayPal, Stripe, Mobile Money).
+
+
+
+8. User Profile System with Badges & Levels
+
+Introduce customizable user profiles with bio, photo, banner, links.
+
+Add progress tracking for learning and community activity.
+
+Implement badges, user levels, and public/private profile settings.
+
+Option to follow/connect with other users.
+
+
+
+
+
+---
+
+Let me know if you'd like this turned into a PDF, developer ticket format, or an API/UX spec doc.
+

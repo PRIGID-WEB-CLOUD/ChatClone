@@ -137,8 +137,8 @@ export default function CourseDetail() {
     );
   }
 
-  const isEnrolled = enrollments?.some(enrollment => enrollment.courseId === course.id);
-  const enrollment = enrollments?.find(enrollment => enrollment.courseId === course.id);
+  const isEnrolled = enrollments?.some((enrollment: any) => enrollment.courseId === course?.id);
+  const enrollment = enrollments?.find((enrollment: any) => enrollment.courseId === course?.id);
   const formatPrice = (price: string) => {
     const numPrice = parseFloat(price);
     return numPrice === 0 ? "Free" : `$${numPrice.toFixed(2)}`;
@@ -169,27 +169,27 @@ export default function CourseDetail() {
             <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
               <Link href="/courses" className="hover:text-primary">Courses</Link>
               <span>/</span>
-              <span>{course.category}</span>
+              <span>{course?.category}</span>
               <span>/</span>
-              <span className="text-gray-900">{course.title}</span>
+              <span className="text-gray-900">{course?.title}</span>
             </nav>
 
             <div className="flex items-center gap-2 mb-4">
-              {course.category && (
+              {course?.category && (
                 <Badge className={getCategoryColor(course.category)}>
                   {course.category}
                 </Badge>
               )}
-              <Badge variant="outline">{course.level || "All Levels"}</Badge>
+              <Badge variant="outline">{course?.level || "All Levels"}</Badge>
             </div>
 
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              {course.title}
+              {course?.title}
             </h1>
 
             <p className="text-xl text-gray-600 mb-6 leading-relaxed">
-              {showFullDescription ? course.description : course.shortDescription}
-              {course.description && course.description !== course.shortDescription && (
+              {showFullDescription ? course?.description : course?.shortDescription}
+              {course?.description && course.description !== course.shortDescription && (
                 <button
                   onClick={() => setShowFullDescription(!showFullDescription)}
                   className="ml-2 text-primary hover:text-primary/80 font-medium"
@@ -202,32 +202,32 @@ export default function CourseDetail() {
             {/* Instructor Info */}
             <div className="flex items-center space-x-4 mb-6">
               <Avatar className="h-12 w-12">
-                <AvatarImage src={course.instructorProfileImage} alt={course.instructorName} />
+                <AvatarImage src={course?.instructorProfileImage} alt={course?.instructorName} />
                 <AvatarFallback>
-                  {course.instructorName?.split(' ').map(n => n[0]).join('') || 'I'}
+                  {course?.instructorName?.split(' ').map((n: string) => n[0]).join('') || 'I'}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <p className="font-semibold text-gray-900">Instructor</p>
-                <p className="text-gray-600">{course.instructorName}</p>
+                <p className="text-gray-600">{course?.instructorName}</p>
               </div>
             </div>
 
             {/* Course Stats */}
             <div className="flex flex-wrap items-center gap-6 mb-8">
-              {course.rating && (
+              {course?.rating && (
                 <div className="flex items-center">
                   <div className="flex items-center text-yellow-500 mr-2">
                     <Star className="w-4 h-4 fill-current" />
                     <span className="font-semibold ml-1">{course.rating}</span>
                   </div>
                   <span className="text-gray-600 text-sm">
-                    ({course.studentsCount || 0} students)
+                    ({course?.studentsCount || 0} students)
                   </span>
                 </div>
               )}
               
-              {course.duration && (
+              {course?.duration && (
                 <div className="flex items-center text-gray-600">
                   <Clock className="w-4 h-4 mr-2" />
                   <span>{course.duration} hours</span>
@@ -236,7 +236,7 @@ export default function CourseDetail() {
 
               <div className="flex items-center text-gray-600">
                 <Users className="w-4 h-4 mr-2" />
-                <span>{course.studentsCount?.toLocaleString() || 0} enrolled</span>
+                <span>{course?.studentsCount?.toLocaleString() || 0} enrolled</span>
               </div>
 
               <div className="flex items-center text-gray-600">
@@ -251,8 +251,8 @@ export default function CourseDetail() {
             <Card className="sticky top-8">
               <div className="aspect-video relative mb-4 rounded-t-lg overflow-hidden">
                 <img
-                  src={course.thumbnailUrl || "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400"}
-                  alt={course.title}
+                  src={course?.thumbnailUrl || "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400"}
+                  alt={course?.title}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -266,9 +266,9 @@ export default function CourseDetail() {
               <CardContent className="p-6">
                 <div className="text-center mb-6">
                   <div className="text-3xl font-bold text-gray-900 mb-2">
-                    {formatPrice(course.price)}
+                    {formatPrice(course?.price || "0")}
                   </div>
-                  {course.price !== "0" && (
+                  {course?.price !== "0" && (
                     <p className="text-sm text-gray-500">One-time payment</p>
                   )}
                 </div>
@@ -307,8 +307,8 @@ export default function CourseDetail() {
                       {enrollMutation.isPending ? "Enrolling..." : "Enroll Now"}
                     </Button>
                     
-                    {course.price !== "0" && (
-                      <Link href={`/checkout/${course.id}`}>
+                    {course?.price !== "0" && (
+                      <Link href={`/checkout/${course?.id}`}>
                         <Button className="w-full" variant="outline" size="lg">
                           Buy Now
                         </Button>
@@ -334,7 +334,7 @@ export default function CourseDetail() {
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center">
                       <Play className="w-4 h-4 mr-2 text-gray-400" />
-                      <span>{course.duration || 0} hours of video content</span>
+                      <span>{course?.duration || 0} hours of video content</span>
                     </li>
                     <li className="flex items-center">
                       <BookOpen className="w-4 h-4 mr-2 text-gray-400" />
@@ -369,7 +369,7 @@ export default function CourseDetail() {
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-semibold">Course Content</h3>
                   <div className="text-sm text-gray-600">
-                    {modules?.length || 0} modules • {course.duration || 0} total hours
+                    {modules?.length || 0} modules • {course?.duration || 0} total hours
                   </div>
                 </div>
 
