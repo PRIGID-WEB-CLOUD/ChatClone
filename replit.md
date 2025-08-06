@@ -65,3 +65,21 @@ Preferred communication style: Simple, everyday language.
 ## File Storage
 - **Local Storage**: File uploads handled via Multer with local filesystem storage (uploads directory)
 - **File Validation**: Type and size validation for media files (images and videos)
+
+# Recent Feature Expansion (January 2025)
+
+## New Platform Features Added
+1. **Group/Discussion Hub**: Real-time chat, threaded discussions, file sharing, group roles
+2. **Enhanced Course Creation**: Rich content editor with structured course builder
+3. **Sidebar Navigation**: Collapsible left sidebar with comprehensive navigation
+4. **Notification System**: Real-time notifications for mentions, updates, events
+5. **Video Platform**: Dedicated video upload, streaming, comments, and analytics
+6. **Events & Webinars**: Live event hosting with registration and ticketing
+7. **Marketplace**: Digital product store with secure downloads and payments
+8. **User Profiles & Gamification**: Badges, levels, following system, public profiles
+
+## Database Schema Extensions
+- Added 15+ new tables for groups, videos, events, products, notifications
+- Implemented user profiles with gamification elements
+- Added notification system with multiple types
+- Extended user relations for comprehensive social features

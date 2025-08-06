@@ -217,7 +217,7 @@ export const groupPosts = pgTable("group_posts", {
   attachments: text("attachments").array().default([]),
   likesCount: integer("likes_count").default(0),
   repliesCount: integer("replies_count").default(0),
-  parentId: varchar("parent_id").references(() => groupPosts.id),
+  parentId: varchar("parent_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -248,7 +248,7 @@ export const videoComments = pgTable("video_comments", {
   authorId: varchar("author_id").references(() => users.id).notNull(),
   content: text("content").notNull(),
   likesCount: integer("likes_count").default(0),
-  parentId: varchar("parent_id").references(() => videoComments.id),
+  parentId: varchar("parent_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -372,6 +372,44 @@ export const notifications = pgTable("notifications", {
 });
 
 // New Relations
+export const groupPostsRelations = relations(groupPosts, ({ one, many }) => ({
+  group: one(groups, {
+    fields: [groupPosts.groupId],
+    references: [groups.id],
+  }),
+  author: one(users, {
+    fields: [groupPosts.authorId],
+    references: [users.id],
+  }),
+  parent: one(groupPosts, {
+    fields: [groupPosts.parentId],
+    references: [groupPosts.id],
+    relationName: "parent",
+  }),
+  replies: many(groupPosts, {
+    relationName: "parent",
+  }),
+}));
+
+export const videoCommentsRelations = relations(videoComments, ({ one, many }) => ({
+  video: one(videos, {
+    fields: [videoComments.videoId],
+    references: [videos.id],
+  }),
+  author: one(users, {
+    fields: [videoComments.authorId],
+    references: [users.id],
+  }),
+  parent: one(videoComments, {
+    fields: [videoComments.parentId],
+    references: [videoComments.id],
+    relationName: "parent",
+  }),
+  replies: many(videoComments, {
+    relationName: "parent",
+  }),
+}));
+
 export const groupsRelations = relations(groups, ({ one, many }) => ({
   creator: one(users, {
     fields: [groups.creatorId],

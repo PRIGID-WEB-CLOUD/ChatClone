@@ -6,6 +6,19 @@ import {
   enrollments,
   reviews,
   lessonProgress,
+  groups,
+  groupMembers,
+  groupPosts,
+  videos,
+  videoComments,
+  events,
+  eventAttendees,
+  products,
+  productPurchases,
+  notifications,
+  userProfiles,
+  userBadges,
+  userFollows,
   type User,
   type UpsertUser,
   type Course,
@@ -18,6 +31,16 @@ import {
   type InsertEnrollment,
   type Review,
   type InsertReview,
+  type Group,
+  type InsertGroup,
+  type Video,
+  type InsertVideo,
+  type Event,
+  type InsertEvent,
+  type Product,
+  type InsertProduct,
+  type GroupPost,
+  type InsertGroupPost,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, ilike, avg, count } from "drizzle-orm";
@@ -69,6 +92,42 @@ export interface IStorage {
   // Analytics
   getUserStats(userId: string): Promise<any>;
   getCourseStats(courseId: string): Promise<any>;
+
+  // Group operations
+  getGroups(limit?: number, search?: string, userId?: string): Promise<Group[]>;
+  getGroup(id: string): Promise<Group | undefined>;
+  createGroup(group: InsertGroup): Promise<Group>;
+  joinGroup(userId: string, groupId: string): Promise<any>;
+  getUserGroups(userId: string): Promise<any[]>;
+  createGroupPost(post: InsertGroupPost): Promise<GroupPost>;
+  getGroupPosts(groupId: string): Promise<any[]>;
+
+  // Video operations
+  getVideos(limit?: number, search?: string, filter?: string): Promise<any[]>;
+  getVideo(id: string): Promise<Video | undefined>;
+  createVideo(video: InsertVideo): Promise<Video>;
+  getUserVideos(userId: string): Promise<Video[]>;
+  updateVideoViews(id: string): Promise<void>;
+
+  // Event operations
+  getEvents(search?: string, status?: string): Promise<any[]>;
+  getEvent(id: string): Promise<Event | undefined>;
+  createEvent(event: InsertEvent): Promise<Event>;
+  registerForEvent(userId: string, eventId: string): Promise<any>;
+  getUserEvents(userId: string): Promise<any[]>;
+
+  // Product operations
+  getProducts(search?: string, type?: string): Promise<any[]>;
+  getProduct(id: string): Promise<Product | undefined>;
+  createProduct(product: InsertProduct): Promise<Product>;
+  getUserProducts(userId: string): Promise<Product[]>;
+  purchaseProduct(userId: string, productId: string, amount: number): Promise<any>;
+
+  // Notification operations
+  getUserNotifications(userId: string, type?: string): Promise<any[]>;
+  createNotification(userId: string, type: string, title: string, message?: string, actionUrl?: string): Promise<any>;
+  markNotificationAsRead(notificationId: string): Promise<void>;
+  markAllNotificationsAsRead(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -414,6 +473,309 @@ export class DatabaseStorage implements IStorage {
       .where(eq(enrollments.courseId, courseId));
 
     return stats;
+  }
+
+  // Group operations
+  async getGroups(limit = 20, search?: string, userId?: string): Promise<Group[]> {
+    let query = db.select().from(groups);
+    
+    if (search) {
+      query = query.where(ilike(groups.name, `%${search}%`));
+    }
+    
+    return query.orderBy(desc(groups.createdAt)).limit(limit);
+  }
+
+  async getGroup(id: string): Promise<Group | undefined> {
+    const [group] = await db.select().from(groups).where(eq(groups.id, id));
+    return group;
+  }
+
+  async createGroup(groupData: InsertGroup): Promise<Group> {
+    const [group] = await db.insert(groups).values(groupData).returning();
+    return group;
+  }
+
+  async joinGroup(userId: string, groupId: string): Promise<any> {
+    const [membership] = await db.insert(groupMembers).values({
+      userId,
+      groupId,
+      role: 'member'
+    }).returning();
+    return membership;
+  }
+
+  async getUserGroups(userId: string): Promise<any[]> {
+    return db
+      .select({
+        id: groups.id,
+        name: groups.name,
+        description: groups.description,
+        imageUrl: groups.imageUrl,
+        type: groups.type,
+        price: groups.price,
+        membersCount: groups.membersCount,
+        isPrivate: groups.isPrivate,
+        createdAt: groups.createdAt,
+        role: groupMembers.role,
+      })
+      .from(groups)
+      .innerJoin(groupMembers, eq(groups.id, groupMembers.groupId))
+      .where(eq(groupMembers.userId, userId))
+      .orderBy(desc(groupMembers.joinedAt));
+  }
+
+  async createGroupPost(postData: InsertGroupPost): Promise<GroupPost> {
+    const [post] = await db.insert(groupPosts).values(postData).returning();
+    return post;
+  }
+
+  async getGroupPosts(groupId: string): Promise<any[]> {
+    return db
+      .select({
+        id: groupPosts.id,
+        content: groupPosts.content,
+        attachments: groupPosts.attachments,
+        likesCount: groupPosts.likesCount,
+        repliesCount: groupPosts.repliesCount,
+        createdAt: groupPosts.createdAt,
+        author: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(groupPosts)
+      .innerJoin(users, eq(groupPosts.authorId, users.id))
+      .where(eq(groupPosts.groupId, groupId))
+      .orderBy(desc(groupPosts.createdAt));
+  }
+
+  // Video operations
+  async getVideos(limit = 20, search?: string, filter?: string): Promise<any[]> {
+    let query = db
+      .select({
+        id: videos.id,
+        title: videos.title,
+        description: videos.description,
+        thumbnailUrl: videos.thumbnailUrl,
+        videoUrl: videos.videoUrl,
+        duration: videos.duration,
+        visibility: videos.visibility,
+        status: videos.status,
+        viewsCount: videos.viewsCount,
+        likesCount: videos.likesCount,
+        commentsCount: videos.commentsCount,
+        tags: videos.tags,
+        createdAt: videos.createdAt,
+        uploader: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(videos)
+      .innerJoin(users, eq(videos.uploaderId, users.id));
+
+    if (search) {
+      query = query.where(ilike(videos.title, `%${search}%`));
+    }
+
+    return query.orderBy(desc(videos.createdAt)).limit(limit);
+  }
+
+  async getVideo(id: string): Promise<Video | undefined> {
+    const [video] = await db.select().from(videos).where(eq(videos.id, id));
+    return video;
+  }
+
+  async createVideo(videoData: InsertVideo): Promise<Video> {
+    const [video] = await db.insert(videos).values(videoData).returning();
+    return video;
+  }
+
+  async getUserVideos(userId: string): Promise<Video[]> {
+    return db.select().from(videos).where(eq(videos.uploaderId, userId));
+  }
+
+  async updateVideoViews(id: string): Promise<void> {
+    await db.update(videos).set({
+      viewsCount: sql`${videos.viewsCount} + 1`
+    }).where(eq(videos.id, id));
+  }
+
+  // Event operations
+  async getEvents(search?: string, status?: string): Promise<any[]> {
+    let query = db
+      .select({
+        id: events.id,
+        title: events.title,
+        description: events.description,
+        imageUrl: events.imageUrl,
+        type: events.type,
+        status: events.status,
+        startTime: events.startTime,
+        endTime: events.endTime,
+        timezone: events.timezone,
+        maxAttendees: events.maxAttendees,
+        price: events.price,
+        attendeesCount: events.attendeesCount,
+        createdAt: events.createdAt,
+        organizer: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(events)
+      .innerJoin(users, eq(events.organizerId, users.id));
+
+    if (search) {
+      query = query.where(ilike(events.title, `%${search}%`));
+    }
+
+    if (status) {
+      query = query.where(eq(events.status, status));
+    }
+
+    return query.orderBy(desc(events.startTime));
+  }
+
+  async getEvent(id: string): Promise<Event | undefined> {
+    const [event] = await db.select().from(events).where(eq(events.id, id));
+    return event;
+  }
+
+  async createEvent(eventData: InsertEvent): Promise<Event> {
+    const [event] = await db.insert(events).values(eventData).returning();
+    return event;
+  }
+
+  async registerForEvent(userId: string, eventId: string): Promise<any> {
+    const [registration] = await db.insert(eventAttendees).values({
+      userId,
+      eventId
+    }).returning();
+    return registration;
+  }
+
+  async getUserEvents(userId: string): Promise<any[]> {
+    return db
+      .select({
+        id: events.id,
+        title: events.title,
+        description: events.description,
+        imageUrl: events.imageUrl,
+        type: events.type,
+        status: events.status,
+        startTime: events.startTime,
+        endTime: events.endTime,
+        timezone: events.timezone,
+        price: events.price,
+        registeredAt: eventAttendees.registeredAt,
+        attended: eventAttendees.attended,
+      })
+      .from(events)
+      .innerJoin(eventAttendees, eq(events.id, eventAttendees.eventId))
+      .where(eq(eventAttendees.userId, userId))
+      .orderBy(desc(events.startTime));
+  }
+
+  // Product operations
+  async getProducts(search?: string, type?: string): Promise<any[]> {
+    let query = db
+      .select({
+        id: products.id,
+        title: products.title,
+        description: products.description,
+        imageUrl: products.imageUrl,
+        type: products.type,
+        status: products.status,
+        price: products.price,
+        downloadCount: products.downloadCount,
+        rating: products.rating,
+        reviewsCount: products.reviewsCount,
+        tags: products.tags,
+        createdAt: products.createdAt,
+        seller: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl,
+        },
+      })
+      .from(products)
+      .innerJoin(users, eq(products.sellerId, users.id));
+
+    if (search) {
+      query = query.where(ilike(products.title, `%${search}%`));
+    }
+
+    if (type) {
+      query = query.where(eq(products.type, type));
+    }
+
+    return query.orderBy(desc(products.createdAt));
+  }
+
+  async getProduct(id: string): Promise<Product | undefined> {
+    const [product] = await db.select().from(products).where(eq(products.id, id));
+    return product;
+  }
+
+  async createProduct(productData: InsertProduct): Promise<Product> {
+    const [product] = await db.insert(products).values(productData).returning();
+    return product;
+  }
+
+  async getUserProducts(userId: string): Promise<Product[]> {
+    return db.select().from(products).where(eq(products.sellerId, userId));
+  }
+
+  async purchaseProduct(userId: string, productId: string, amount: number): Promise<any> {
+    const [purchase] = await db.insert(productPurchases).values({
+      buyerId: userId,
+      productId,
+      amount: amount.toString()
+    }).returning();
+    return purchase;
+  }
+
+  // Notification operations
+  async getUserNotifications(userId: string, type?: string): Promise<any[]> {
+    let query = db.select().from(notifications).where(eq(notifications.userId, userId));
+    
+    if (type) {
+      query = query.where(eq(notifications.type, type));
+    }
+
+    return query.orderBy(desc(notifications.createdAt));
+  }
+
+  async createNotification(userId: string, type: string, title: string, message?: string, actionUrl?: string): Promise<any> {
+    const [notification] = await db.insert(notifications).values({
+      userId,
+      type,
+      title,
+      message,
+      actionUrl
+    }).returning();
+    return notification;
+  }
+
+  async markNotificationAsRead(notificationId: string): Promise<void> {
+    await db.update(notifications).set({
+      isRead: true
+    }).where(eq(notifications.id, notificationId));
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db.update(notifications).set({
+      isRead: true
+    }).where(eq(notifications.userId, userId));
   }
 }
 

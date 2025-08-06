@@ -3,7 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCourseSchema, insertModuleSchema, insertLessonSchema, insertReviewSchema } from "@shared/schema";
+import { insertCourseSchema, insertModuleSchema, insertLessonSchema, insertReviewSchema, insertGroupSchema, insertVideoSchema, insertEventSchema, insertProductSchema, insertGroupPostSchema } from "@shared/schema";
 import Paystack from "paystack";
 import multer from "multer";
 import path from "path";
@@ -394,6 +394,211 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Payment verification error:", error);
       res.status(500).json({ message: "Error verifying payment: " + error.message });
+    }
+  });
+
+  // Group routes
+  app.get('/api/groups', async (req, res) => {
+    try {
+      const { search, limit } = req.query;
+      const groups = await storage.getGroups(
+        limit ? parseInt(limit as string) : 20,
+        search as string
+      );
+      res.json(groups);
+    } catch (error: any) {
+      console.error("Error fetching groups:", error);
+      res.status(500).json({ message: "Failed to fetch groups" });
+    }
+  });
+
+  app.get('/api/my-groups', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groups = await storage.getUserGroups(userId);
+      res.json(groups);
+    } catch (error: any) {
+      console.error("Error fetching user groups:", error);
+      res.status(500).json({ message: "Failed to fetch user groups" });
+    }
+  });
+
+  app.post('/api/groups', isAuthenticated, upload.single('image'), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const groupData = insertGroupSchema.parse({
+        ...req.body,
+        creatorId: userId,
+        imageUrl: req.file ? `/uploads/${req.file.filename}` : undefined,
+      });
+
+      const group = await storage.createGroup(groupData);
+      await storage.joinGroup(userId, group.id); // Auto-join creator as member
+      res.status(201).json(group);
+    } catch (error: any) {
+      console.error("Error creating group:", error);
+      res.status(400).json({ message: "Failed to create group", error: error.message });
+    }
+  });
+
+  app.post('/api/groups/:groupId/join', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const membership = await storage.joinGroup(userId, req.params.groupId);
+      res.status(201).json(membership);
+    } catch (error: any) {
+      console.error("Error joining group:", error);
+      res.status(400).json({ message: "Failed to join group", error: error.message });
+    }
+  });
+
+  // Video routes
+  app.get('/api/videos', async (req, res) => {
+    try {
+      const { search, filter, limit } = req.query;
+      const videos = await storage.getVideos(
+        limit ? parseInt(limit as string) : 20,
+        search as string,
+        filter as string
+      );
+      res.json(videos);
+    } catch (error: any) {
+      console.error("Error fetching videos:", error);
+      res.status(500).json({ message: "Failed to fetch videos" });
+    }
+  });
+
+  app.post('/api/videos', isAuthenticated, upload.fields([
+    { name: 'video', maxCount: 1 },
+    { name: 'thumbnail', maxCount: 1 }
+  ]), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      
+      const videoData = insertVideoSchema.parse({
+        ...req.body,
+        uploaderId: userId,
+        videoUrl: files.video?.[0] ? `/uploads/${files.video[0].filename}` : undefined,
+        thumbnailUrl: files.thumbnail?.[0] ? `/uploads/${files.thumbnail[0].filename}` : undefined,
+      });
+
+      const video = await storage.createVideo(videoData);
+      res.status(201).json(video);
+    } catch (error: any) {
+      console.error("Error creating video:", error);
+      res.status(400).json({ message: "Failed to create video", error: error.message });
+    }
+  });
+
+  // Event routes
+  app.get('/api/events', async (req, res) => {
+    try {
+      const { search, status } = req.query;
+      const events = await storage.getEvents(search as string, status as string);
+      res.json(events);
+    } catch (error: any) {
+      console.error("Error fetching events:", error);
+      res.status(500).json({ message: "Failed to fetch events" });
+    }
+  });
+
+  app.post('/api/events', isAuthenticated, upload.single('image'), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const eventData = insertEventSchema.parse({
+        ...req.body,
+        organizerId: userId,
+        imageUrl: req.file ? `/uploads/${req.file.filename}` : undefined,
+      });
+
+      const event = await storage.createEvent(eventData);
+      res.status(201).json(event);
+    } catch (error: any) {
+      console.error("Error creating event:", error);
+      res.status(400).json({ message: "Failed to create event", error: error.message });
+    }
+  });
+
+  app.post('/api/events/:eventId/register', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const registration = await storage.registerForEvent(userId, req.params.eventId);
+      res.status(201).json(registration);
+    } catch (error: any) {
+      console.error("Error registering for event:", error);
+      res.status(400).json({ message: "Failed to register for event", error: error.message });
+    }
+  });
+
+  // Marketplace routes
+  app.get('/api/marketplace', async (req, res) => {
+    try {
+      const { search, type } = req.query;
+      const products = await storage.getProducts(search as string, type as string);
+      res.json(products);
+    } catch (error: any) {
+      console.error("Error fetching products:", error);
+      res.status(500).json({ message: "Failed to fetch products" });
+    }
+  });
+
+  app.post('/api/marketplace', isAuthenticated, upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'file', maxCount: 1 },
+    { name: 'preview', maxCount: 1 }
+  ]), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      
+      const productData = insertProductSchema.parse({
+        ...req.body,
+        sellerId: userId,
+        imageUrl: files.image?.[0] ? `/uploads/${files.image[0].filename}` : undefined,
+        fileUrl: files.file?.[0] ? `/uploads/${files.file[0].filename}` : undefined,
+        previewUrl: files.preview?.[0] ? `/uploads/${files.preview[0].filename}` : undefined,
+      });
+
+      const product = await storage.createProduct(productData);
+      res.status(201).json(product);
+    } catch (error: any) {
+      console.error("Error creating product:", error);
+      res.status(400).json({ message: "Failed to create product", error: error.message });
+    }
+  });
+
+  // Notification routes
+  app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { type } = req.query;
+      const notifications = await storage.getUserNotifications(userId, type as string);
+      res.json(notifications);
+    } catch (error: any) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.put('/api/notifications/:id/read', isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.markNotificationAsRead(req.params.id);
+      res.json({ message: "Notification marked as read" });
+    } catch (error: any) {
+      console.error("Error marking notification as read:", error);
+      res.status(400).json({ message: "Failed to mark notification as read", error: error.message });
+    }
+  });
+
+  app.put('/api/notifications/mark-all-read', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.markAllNotificationsAsRead(userId);
+      res.json({ message: "All notifications marked as read" });
+    } catch (error: any) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(400).json({ message: "Failed to mark all notifications as read", error: error.message });
     }
   });
 
