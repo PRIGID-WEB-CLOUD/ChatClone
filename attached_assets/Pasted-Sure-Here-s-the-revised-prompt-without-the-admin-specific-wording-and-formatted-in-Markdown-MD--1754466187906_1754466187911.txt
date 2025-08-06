@@ -1,0 +1,113 @@
+Sure! Here's the revised prompt without the admin-specific wording, and formatted in Markdown (MD):
+
+
+---
+
+# 🌐 Platform Feature Expansion Prompt
+
+Please implement the following features in the platform to enhance user experience and interactivity.
+
+---
+
+## 1. Group/Discussion Hub
+
+- Allow users to create and join discussion groups or hubs.
+- Features:
+  - Real-time chat and threaded discussions
+  - User tagging (@username), mentions, and hashtags (#topic)
+  - Upload support: PDF, MP3, MP4, PNG, DOCX, ZIP, and more
+  - Group roles: creator, member, moderator
+  - Free or paid group access
+
+---
+
+## 2. Course Creation with Editor
+
+- Add a course creation interface with:
+  - Rich content editor (text, video, audio, images)
+  - Structured course builder (modules, lessons)
+  - Visibility controls (public/private/unlisted)
+  - Free or paid pricing options
+
+---
+
+## 3. Sidebar Navigation (Expanded)
+
+- Add a collapsible left-hand sidebar with icons and text labels.
+- Include navigation links to:
+  - Dashboard
+  - My Learning
+  - Course Page
+  - Community
+  - Groups
+  - Video Page
+  - Events & Webinars
+  - Marketplace / Store
+  - Profile & Settings
+  - Notifications
+
+---
+
+## 4. Notification & Activity Center
+
+- Real-time notifications for:
+  - Mentions, group invites, course updates, video comments, event alerts
+- Add an activity center to track:
+  - Recent actions (posts, enrollments, uploads)
+- Include preferences for:
+  - Email, in-app, and push notifications
+  - Read/unread indicators and filter options
+
+---
+
+## 5. Video Page
+
+- Create a dedicated page for video content.
+- Features:
+  - Upload and stream videos (MP4, MOV, WebM)
+  - Like, comment, and share options
+  - Playlist support and video series
+  - Privacy settings (public/private/unlisted)
+  - Basic video analytics (views, likes, watch time)
+
+---
+
+## 6. Events & Webinar System
+
+- Let users create and host live events or webinars.
+- Features:
+  - Scheduling and countdown timer
+  - Integration with Zoom, YouTube Live, or Vimeo
+  - Event registration and calendar sync
+  - Live chat and Q&A
+  - Ticketing options (free or paid)
+  - Event replays available post-event
+
+---
+
+## 7. Marketplace / Resource Store
+
+- Users can sell or share downloadable content:
+  - Templates, documents, eBooks, software, designs, etc.
+- Include:
+  - Product previews, pricing, reviews/ratings
+  - Secure download system
+  - Payment gateways (Stripe, PayPal, Mobile Money)
+  - Sales dashboard with basic analytics
+
+---
+
+## 8. User Profile System with Badges & Levels
+
+- Allow users to customize their profile:
+  - Bio, avatar, banner image, portfolio links
+- Add gamification:
+  - Levels/ranks based on learning and community participation
+  - Earnable badges (e.g., Top Learner, Contributor, Verified)
+- Profiles can be public or private
+- Follow/connect feature between users
+
+---
+
+Let me know if you want this converted into a downloadable .md file or turned into a PDF or website layout.
+

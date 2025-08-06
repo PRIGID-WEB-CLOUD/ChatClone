@@ -179,6 +179,266 @@ export const lessonProgressRelations = relations(lessonProgress, ({ one }) => ({
   }),
 }));
 
+// New Feature Tables
+
+// Groups/Discussion Hub
+export const groupStatus = pgEnum("group_status", ["active", "archived"]);
+export const groupType = pgEnum("group_type", ["free", "paid"]);
+
+export const groups = pgTable("groups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  imageUrl: varchar("image_url"),
+  creatorId: varchar("creator_id").references(() => users.id).notNull(),
+  type: groupType("type").default("free"),
+  price: decimal("price", { precision: 10, scale: 2 }).default("0.00"),
+  status: groupStatus("status").default("active"),
+  membersCount: integer("members_count").default(0),
+  isPrivate: boolean("is_private").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const groupMemberRole = pgEnum("group_member_role", ["creator", "moderator", "member"]);
+
+export const groupMembers = pgTable("group_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").references(() => groups.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  role: groupMemberRole("role").default("member"),
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+export const groupPosts = pgTable("group_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").references(() => groups.id).notNull(),
+  authorId: varchar("author_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  attachments: text("attachments").array().default([]),
+  likesCount: integer("likes_count").default(0),
+  repliesCount: integer("replies_count").default(0),
+  parentId: varchar("parent_id").references(() => groupPosts.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Videos
+export const videoStatus = pgEnum("video_status", ["processing", "ready", "failed"]);
+export const videoVisibility = pgEnum("video_visibility", ["public", "private", "unlisted"]);
+
+export const videos = pgTable("videos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  thumbnailUrl: varchar("thumbnail_url"),
+  videoUrl: varchar("video_url").notNull(),
+  uploaderId: varchar("uploader_id").references(() => users.id).notNull(),
+  duration: integer("duration"), // in seconds
+  visibility: videoVisibility("visibility").default("public"),
+  status: videoStatus("status").default("processing"),
+  viewsCount: integer("views_count").default(0),
+  likesCount: integer("likes_count").default(0),
+  commentsCount: integer("comments_count").default(0),
+  tags: text("tags").array().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const videoComments = pgTable("video_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  videoId: varchar("video_id").references(() => videos.id).notNull(),
+  authorId: varchar("author_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  likesCount: integer("likes_count").default(0),
+  parentId: varchar("parent_id").references(() => videoComments.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Events & Webinars
+export const eventType = pgEnum("event_type", ["webinar", "workshop", "live_session", "meetup"]);
+export const eventStatus = pgEnum("event_status", ["upcoming", "live", "ended", "cancelled"]);
+
+export const events = pgTable("events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  imageUrl: varchar("image_url"),
+  organizerId: varchar("organizer_id").references(() => users.id).notNull(),
+  type: eventType("type").default("webinar"),
+  status: eventStatus("status").default("upcoming"),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  timezone: varchar("timezone").default("UTC"),
+  streamUrl: varchar("stream_url"),
+  recordingUrl: varchar("recording_url"),
+  maxAttendees: integer("max_attendees"),
+  price: decimal("price", { precision: 10, scale: 2 }).default("0.00"),
+  attendeesCount: integer("attendees_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const eventAttendees = pgTable("event_attendees", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").references(() => events.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  registeredAt: timestamp("registered_at").defaultNow(),
+  attended: boolean("attended").default(false),
+});
+
+// Marketplace
+export const productType = pgEnum("product_type", ["digital", "template", "ebook", "software", "design"]);
+export const productStatus = pgEnum("product_status", ["active", "paused", "sold_out"]);
+
+export const products = pgTable("products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  imageUrl: varchar("image_url"),
+  sellerId: varchar("seller_id").references(() => users.id).notNull(),
+  type: productType("type").default("digital"),
+  status: productStatus("status").default("active"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  fileUrl: varchar("file_url").notNull(),
+  previewUrl: varchar("preview_url"),
+  downloadCount: integer("download_count").default(0),
+  rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"),
+  reviewsCount: integer("reviews_count").default(0),
+  tags: text("tags").array().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const productPurchases = pgTable("product_purchases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: varchar("product_id").references(() => products.id).notNull(),
+  buyerId: varchar("buyer_id").references(() => users.id).notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  purchasedAt: timestamp("purchased_at").defaultNow(),
+});
+
+// User Profiles & Gamification
+export const userLevel = pgEnum("user_level", ["beginner", "intermediate", "advanced", "expert", "master"]);
+
+export const userProfiles = pgTable("user_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull().unique(),
+  bio: text("bio"),
+  bannerUrl: varchar("banner_url"),
+  portfolioLinks: text("portfolio_links").array().default([]),
+  isPublic: boolean("is_public").default(true),
+  level: userLevel("level").default("beginner"),
+  experiencePoints: integer("experience_points").default(0),
+  followersCount: integer("followers_count").default(0),
+  followingCount: integer("following_count").default(0),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const badges = pgTable("badges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  iconUrl: varchar("icon_url"),
+  criteria: text("criteria"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const userBadges = pgTable("user_badges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  badgeId: varchar("badge_id").references(() => badges.id).notNull(),
+  earnedAt: timestamp("earned_at").defaultNow(),
+});
+
+export const userFollows = pgTable("user_follows", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  followerId: varchar("follower_id").references(() => users.id).notNull(),
+  followingId: varchar("following_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Notifications
+export const notificationType = pgEnum("notification_type", [
+  "mention", "group_invite", "course_update", "video_comment", "event_alert", 
+  "new_follower", "badge_earned", "purchase_complete"
+]);
+
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  type: notificationType("type").notNull(),
+  title: varchar("title").notNull(),
+  message: text("message"),
+  actionUrl: varchar("action_url"),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// New Relations
+export const groupsRelations = relations(groups, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [groups.creatorId],
+    references: [users.id],
+  }),
+  members: many(groupMembers),
+  posts: many(groupPosts),
+}));
+
+export const groupMembersRelations = relations(groupMembers, ({ one }) => ({
+  group: one(groups, {
+    fields: [groupMembers.groupId],
+    references: [groups.id],
+  }),
+  user: one(users, {
+    fields: [groupMembers.userId],
+    references: [users.id],
+  }),
+}));
+
+export const videosRelations = relations(videos, ({ one, many }) => ({
+  uploader: one(users, {
+    fields: [videos.uploaderId],
+    references: [users.id],
+  }),
+  comments: many(videoComments),
+}));
+
+export const eventsRelations = relations(events, ({ one, many }) => ({
+  organizer: one(users, {
+    fields: [events.organizerId],
+    references: [users.id],
+  }),
+  attendees: many(eventAttendees),
+}));
+
+export const productsRelations = relations(products, ({ one, many }) => ({
+  seller: one(users, {
+    fields: [products.sellerId],
+    references: [users.id],
+  }),
+  purchases: many(productPurchases),
+}));
+
+export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
+  user: one(users, {
+    fields: [userProfiles.userId],
+    references: [users.id],
+  }),
+}));
+
+// Updated Users Relations
+export const updatedUsersRelations = relations(users, ({ many, one }) => ({
+  courses: many(courses),
+  enrollments: many(enrollments),
+  reviews: many(reviews),
+  lessonProgress: many(lessonProgress),
+  groups: many(groups),
+  groupMemberships: many(groupMembers),
+  videos: many(videos),
+  events: many(events),
+  products: many(products),
+  profile: one(userProfiles),
+  badges: many(userBadges),
+  notifications: many(notifications),
+}));
+
 // Schemas
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -222,3 +482,49 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
 });
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
+
+// New Feature Schemas
+export const insertGroupSchema = createInsertSchema(groups).omit({
+  id: true,
+  createdAt: true,
+  membersCount: true,
+});
+export type InsertGroup = z.infer<typeof insertGroupSchema>;
+export type Group = typeof groups.$inferSelect;
+
+export const insertVideoSchema = createInsertSchema(videos).omit({
+  id: true,
+  createdAt: true,
+  viewsCount: true,
+  likesCount: true,
+  commentsCount: true,
+});
+export type InsertVideo = z.infer<typeof insertVideoSchema>;
+export type Video = typeof videos.$inferSelect;
+
+export const insertEventSchema = createInsertSchema(events).omit({
+  id: true,
+  createdAt: true,
+  attendeesCount: true,
+});
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+export type Event = typeof events.$inferSelect;
+
+export const insertProductSchema = createInsertSchema(products).omit({
+  id: true,
+  createdAt: true,
+  downloadCount: true,
+  rating: true,
+  reviewsCount: true,
+});
+export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type Product = typeof products.$inferSelect;
+
+export const insertGroupPostSchema = createInsertSchema(groupPosts).omit({
+  id: true,
+  createdAt: true,
+  likesCount: true,
+  repliesCount: true,
+});
+export type InsertGroupPost = z.infer<typeof insertGroupPostSchema>;
+export type GroupPost = typeof groupPosts.$inferSelect;
